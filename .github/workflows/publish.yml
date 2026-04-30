@@ -2,7 +2,7 @@ name: Build and publish wasmstreet component
 
 on:
   push:
-    branches: [main, add-publish-workflow]
+    branches: [main]
     tags: ["v*"]
   workflow_dispatch:
     inputs:
@@ -114,10 +114,13 @@ jobs:
           password: ${{ github.token }}
 
       # Run wash oci push directly so the underlying error surfaces in the
-      # log on failure. The wasmcloud/actions/wash-oci-publish action wraps
-      # this in a $(...) capture under `set -e`, which swallows the wash
-      # error message when the push exits non-zero.
+      # log on failure. The wasmcloud/actions/wash-oci-publish composite
+      # action wraps this in a $(...) capture under `set -e`, which
+      # swallows the wash error message when the push exits non-zero.
+      # All tags resolve to the same digest, which we capture for the
+      # attestation step below.
       - name: Push component to ghcr.io/cosmonic-labs/wasmstreet
+        id: push
         shell: bash
         env:
           IMAGE_TAGS: ${{ steps.tags.outputs.image_tags }}
@@ -125,9 +128,24 @@ jobs:
         run: |
           set -euo pipefail
           IFS=',' read -ra TAGS <<< "$IMAGE_TAGS"
+          digest=""
           for tag in "${TAGS[@]}"; do
             tag=$(echo "$tag" | xargs)
             ref="ghcr.io/cosmonic-labs/wasmstreet:$tag"
             echo "Pushing $ref"
-            wash oci push "$ref" "$COMPONENT_PATH"
+            push_json=$(wash oci push --output json "$ref" "$COMPONENT_PATH")
+            this_digest=$(echo "$push_json" | jq -r .data.digest)
+            if [ -z "$this_digest" ] || [ "$this_digest" = "null" ]; then
+              echo "::error::no digest in push output: $push_json"
+              exit 1
+            fi
+            digest="$this_digest"
           done
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Attest published image
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/cosmonic-labs/wasmstreet
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
