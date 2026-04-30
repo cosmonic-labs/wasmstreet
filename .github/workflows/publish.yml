@@ -1,0 +1,98 @@
+name: Build and publish wasmstreet component
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag to publish (e.g. 0.1.0). Defaults to the git sha."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+  attestations: write
+  id-token: write
+
+jobs:
+  build-and-publish:
+    name: Build composed component and push to ghcr.io
+    runs-on: ubuntu-latest
+
+    env:
+      WASI_SDK_VERSION: "28.0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # wasmstreet's `make compose` build pipeline links a Rust workspace
+      # and a set of C++ components together with `wac plug`. The pipeline
+      # needs wasi-sdk (for the C++ components), wac, wasm-tools, wkg, and
+      # wit-bindgen, in addition to wash itself.
+      - name: Install Rust toolchain (wasm32-wasip2)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip2
+
+      - name: Install wasi-sdk
+        run: |
+          set -euo pipefail
+          ARCH=$(uname -m)
+          case "$ARCH" in
+            x86_64) WASI_ARCH="x86_64" ;;
+            aarch64|arm64) WASI_ARCH="arm64" ;;
+            *) echo "unsupported arch: $ARCH" >&2; exit 1 ;;
+          esac
+          URL="https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_SDK_VERSION}/wasi-sdk-${WASI_SDK_VERSION}-${WASI_ARCH}-linux.tar.gz"
+          curl -sSfL "$URL" -o /tmp/wasi-sdk.tar.gz
+          mkdir -p "$HOME/wasi-sdk"
+          tar -xzf /tmp/wasi-sdk.tar.gz -C "$HOME/wasi-sdk" --strip-components=0
+          INSTALLED=$(ls -d "$HOME/wasi-sdk"/wasi-sdk-* | head -1)
+          echo "WASI_SDK_PATH=$INSTALLED" >> "$GITHUB_ENV"
+
+      - name: Install wac, wasm-tools, wkg, wit-bindgen
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wac-cli,wasm-tools,wkg,wit-bindgen-cli
+
+      - name: Setup wash CLI
+        uses: wasmcloud/setup-wash-action@main
+
+      - name: Build composed component
+        id: build
+        uses: wasmcloud/wash-build@main
+
+      - name: Compute image tags
+        id: tags
+        run: |
+          set -euo pipefail
+          # Default tag set: short sha plus a moving "latest" on main pushes,
+          # plus the semver-like ref name on git tag pushes, plus an explicit
+          # workflow_dispatch override.
+          tags=()
+          if [ -n "${{ inputs.tag }}" ]; then
+            tags+=("${{ inputs.tag }}")
+          fi
+          tags+=("sha-${GITHUB_SHA::7}")
+          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+            tags+=("latest")
+          fi
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            tags+=("${GITHUB_REF_NAME#v}")
+          fi
+          # Deduplicate.
+          printf '%s\n' "${tags[@]}" | awk '!seen[$0]++' | paste -sd, - > tags.txt
+          echo "image_tags=$(cat tags.txt)" >> "$GITHUB_OUTPUT"
+          echo "Computed image tags: $(cat tags.txt)"
+
+      - name: Publish component to ghcr.io/cosmonic-labs/wasmstreet
+        uses: wasmcloud/wash-oci-publish@main
+        with:
+          component_path: ${{ steps.build.outputs.component_path }}
+          registry: ghcr.io
+          attestation: "true"
+          image_tags: ${{ steps.tags.outputs.image_tags }}
