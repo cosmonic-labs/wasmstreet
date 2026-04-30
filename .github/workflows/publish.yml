@@ -2,7 +2,7 @@ name: Build and publish wasmstreet component
 
 on:
   push:
-    branches: [main]
+    branches: [main, add-publish-workflow]
     tags: ["v*"]
   workflow_dispatch:
     inputs:
