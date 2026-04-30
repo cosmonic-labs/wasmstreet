@@ -62,6 +62,8 @@ jobs:
 
       - name: Setup wash CLI
         uses: wasmcloud/setup-wash-action@main
+        with:
+          wash-version: "v2.0.5"
 
       - name: Build composed component
         id: build
