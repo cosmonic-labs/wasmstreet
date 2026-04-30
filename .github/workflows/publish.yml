@@ -64,7 +64,7 @@ jobs:
 
       - name: Build composed component
         id: build
-        uses: wasmcloud/wash-build@main
+        uses: wasmcloud/actions/wash-build@main
 
       - name: Compute image tags
         id: tags
@@ -90,7 +90,7 @@ jobs:
           echo "Computed image tags: $(cat tags.txt)"
 
       - name: Publish component to ghcr.io/cosmonic-labs/wasmstreet
-        uses: wasmcloud/wash-oci-publish@main
+        uses: wasmcloud/actions/wash-oci-publish@main
         with:
           component_path: ${{ steps.build.outputs.component_path }}
           registry: ghcr.io
