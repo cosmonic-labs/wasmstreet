@@ -85,7 +85,7 @@ Ticker autocomplete is its own wasm component, [`components/ticker-search/`](com
 
 ## About this data
 
-**Honest answer: the option chains aren't sourced from anyone — they're synthesized in C++ around the live spot.** Only the spot price is real. The disclaimer modal that shows on every page load says this; here's the longer version.
+**WARNING** The option chains aren't sourced from anyone — they're synthesized in C++ around the live spot. Only the spot price is real. The disclaimer modal that shows on every page load says this; here's the longer version.
 
 ### Live (best-effort)
 
