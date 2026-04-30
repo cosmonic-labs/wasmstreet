@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1280, initial-scale=1">
+  <title>WasmStreet — Build & price multi-leg options strategies</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">
+      <span class="brand-mark">W</span>
+      <div class="brand-text">
+        <strong>WasmStreet</strong>
+        <small>Build &amp; price multi-leg options strategies — every number computed by WebAssembly Components</small>
+      </div>
+    </div>
+    <div class="topbar-status">
+      <button id="tour-btn" class="tour-btn" data-tooltip="Walk through the app step-by-step.">? Tour</button>
+      <span class="badge" id="data-source-badge"
+            data-tooltip="<strong>Data source.</strong> &lsquo;YAHOO LIVE&rsquo; means the spot price was just fetched from Yahoo Finance by the wasm <code>market-data</code> component. &lsquo;FIXTURE&rsquo; means Yahoo was unreachable and we&rsquo;re showing baked data so the demo never silently breaks.">…</span>
+      <span class="latency"
+            data-tooltip="<strong>Round-trip latency</strong> for the last request to one of the wasm components. Includes WIT call + JSON serialize + HTTP."><span id="latency-value">—</span><small>ms</small></span>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- ===== Panel 1 — Ticker + Option Chain ===== -->
+    <section class="panel" id="panel-chain">
+      <div class="panel-head">
+        <h2>1 · Pick a ticker</h2>
+        <div id="ticker-search-wrap"></div>
+        <div class="stock-card" id="stock-card"></div>
+      </div>
+      <div class="panel-body">
+        <div class="chain-toolbar" id="chain-toolbar"></div>
+        <div class="chain-wrap" id="chain-wrap">
+          <div class="empty">Type a ticker above to load its option chain.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Panel 2 — Selected Legs ===== -->
+    <section class="panel" id="panel-legs">
+      <div class="panel-head">
+        <h2>2 · Configure your legs</h2>
+        <span class="hint">Click rows in the chain to add. Toggle Buy/Sell, set units.</span>
+      </div>
+      <div class="panel-body">
+        <div id="legs-wrap"><div class="empty">No legs yet — click rows in the chain above.</div></div>
+      </div>
+    </section>
+
+    <!-- ===== Panel 3 — Scenario + P&L grid ===== -->
+    <section class="panel" id="panel-scenario">
+      <div class="panel-head">
+        <h2>3 · Scenario &amp; P&amp;L</h2>
+        <div class="scenario-controls" id="scenario-controls"></div>
+      </div>
+      <div class="panel-body">
+        <div class="stats-row" id="stats-row"></div>
+        <div class="viz-tabs" id="viz-tabs">
+          <button class="active" data-tab="heatmap">Heatmap</button>
+          <button data-tab="payoff">Payoff lines</button>
+        </div>
+        <div class="viz-wrap" id="pnl-viz">
+          <div class="empty">Add at least one leg to see the P&amp;L grid.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Panel 4 — Strategy search ===== -->
+    <section class="panel" id="panel-search">
+      <div class="panel-head">
+        <h2>4 · Find winning strategies</h2>
+        <span class="hint" data-tooltip="The C++ <code>pricer-strategy-search</code> wasm component enumerates ~500 candidate multi-leg strategies built from this chain (long calls/puts, vertical spreads, straddles, strangles, iron condors), runs each through Black-Scholes on a small (price × time) grid, scores them by your selected objective, and returns the top results. Sub-100 ms server-side.">How does this work?</span>
+        <div id="search-controls" style="margin-left:auto; display:flex; gap:10px; align-items:center;"></div>
+      </div>
+      <div class="panel-body">
+        <div id="search-results">
+          <div class="empty">Pick a ticker, then hit <strong>Search strategies</strong> to score every plausible strategy on its chain.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

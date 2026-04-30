@@ -1,0 +1,14 @@
+/Users/liam/source/cosmonic/wasmstreet/components/ticker-search/target/debug/deps/serde-dd47bf4011bf8d97.d: /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/liam/source/cosmonic/wasmstreet/components/ticker-search/target/debug/build/serde-b5674cb42a0f9b5a/out/private.rs
+
+/Users/liam/source/cosmonic/wasmstreet/components/ticker-search/target/debug/deps/libserde-dd47bf4011bf8d97.rlib: /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/liam/source/cosmonic/wasmstreet/components/ticker-search/target/debug/build/serde-b5674cb42a0f9b5a/out/private.rs
+
+/Users/liam/source/cosmonic/wasmstreet/components/ticker-search/target/debug/deps/libserde-dd47bf4011bf8d97.rmeta: /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/liam/source/cosmonic/wasmstreet/components/ticker-search/target/debug/build/serde-b5674cb42a0f9b5a/out/private.rs
+
+/Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/liam/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/liam/source/cosmonic/wasmstreet/components/ticker-search/target/debug/build/serde-b5674cb42a0f9b5a/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/liam/source/cosmonic/wasmstreet/components/ticker-search/target/debug/build/serde-b5674cb42a0f9b5a/out

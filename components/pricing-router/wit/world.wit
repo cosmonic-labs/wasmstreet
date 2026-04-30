@@ -1,0 +1,13 @@
+package wasmstreet:router@0.1.0;
+
+world router {
+    import wasmstreet:pricing/types@0.1.0;
+    import wasmstreet:pricing/black-scholes@0.1.0;
+    import wasmstreet:pricing/monte-carlo@0.1.0;
+    import wasmstreet:pricing/binomial-tree@0.1.0;
+    import wasmstreet:pricing/quote@0.1.0;
+    import wasmstreet:pricing/strategy@0.1.0;
+    import wasmstreet:pricing/search@0.1.0;
+    import wasmstreet:pricing/tickers@0.1.0;
+    include wasi:http/proxy@0.2.8;
+}

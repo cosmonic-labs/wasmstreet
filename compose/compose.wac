@@ -1,0 +1,25 @@
+// compose/compose.wac — declarative WAC script as documentation.
+//
+// In this project we drive composition from the top-level Makefile via
+// `wac plug --plug <pricer.wasm> --plug ... <router.wasm> -o build/wasmstreet.wasm`.
+// That works because each pricer exports a unique interface
+// (wasmstreet:pricing/black-scholes, /monte-carlo, /binomial-tree) and the
+// router imports each by name; wac auto-resolves on interface match.
+//
+// The semantically equivalent WAC script is below for reference; if you
+// prefer running `wac compose compose.wac` directly, it works once you
+// substitute the on-disk paths to the pricer artifacts.
+
+package wasmstreet:app@0.1.0;
+
+let bs     = new wasmstreet:bs-pricer { ... };
+let mc     = new wasmstreet:mc-pricer { ... };
+let bt     = new wasmstreet:bt-pricer { ... };
+let router = new wasmstreet:router    {
+  black-scholes:  bs.black-scholes,
+  monte-carlo:    mc.monte-carlo,
+  binomial-tree:  bt.binomial-tree,
+  ...
+};
+
+export router...;

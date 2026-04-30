@@ -1,0 +1,293 @@
+package wasmstreet:pricing@0.1.0;
+
+interface types {
+    record option-spec {
+        spot: f64,
+        strike: f64,
+        vol: f64,
+        rate: f64,
+        time: f64,
+    }
+
+    record greeks {
+        delta: f64,
+        gamma: f64,
+        vega: f64,
+        theta: f64,
+        rho: f64,
+    }
+
+    record bs-result {
+        call-price: f64,
+        put-price: f64,
+        greeks: greeks,
+    }
+
+    record mc-result {
+        price: f64,
+        std-error: f64,
+        // Flat row-major matrix of size (viz-paths * viz-steps).
+        // sample-paths[p * viz-steps + k] is path p at sampled step k.
+        sample-paths: list<f64>,
+        viz-paths: u32,
+        viz-steps: u32,
+        num-paths: u32,
+        num-steps: u32,
+    }
+}
+
+interface black-scholes {
+    use types.{option-spec, bs-result};
+    price-european: func(spec: option-spec) -> result<bs-result, string>;
+}
+
+interface monte-carlo {
+    use types.{option-spec, mc-result};
+
+    record mc-spec {
+        underlying: option-spec,
+        num-paths: u32,
+        num-steps: u32,
+        seed: u64,
+    }
+
+    price-asian-call: func(spec: mc-spec) -> result<mc-result, string>;
+}
+
+interface binomial-tree {
+    use types.{option-spec};
+
+    enum option-type {
+        call,
+        put,
+    }
+
+    record bt-spec {
+        underlying: option-spec,
+        steps: u32,
+        american: bool,
+        kind: option-type,
+    }
+
+    record bt-result {
+        price: f64,
+        steps: u32,
+        // Flat triangular array of node values, size (steps+1)*(steps+2)/2.
+        // Node at level n, position i (0 <= i <= n) is at index n*(n+1)/2 + i.
+        // Stores the option value at that node from the backward induction.
+        node-values: list<f64>,
+        // Spot prices at each node, same indexing as node-values.
+        node-spots: list<f64>,
+    }
+
+    price: func(spec: bt-spec) -> result<bt-result, string>;
+}
+
+interface quote {
+    record stock-quote {
+        ticker: string,
+        name: string,
+        spot: f64,
+        day-change: f64,
+        day-change-pct: f64,
+        as-of: string,
+        source: string,
+    }
+
+    record option-contract {
+        strike: f64,
+        bid: f64,
+        ask: f64,
+        last: f64,
+        iv: f64,
+        volume: u32,
+        open-interest: u32,
+        expiration: string,
+        days-to-exp: f64,
+    }
+
+    record option-chain {
+        ticker: string,
+        name: string,
+        spot: f64,
+        day-change: f64,
+        day-change-pct: f64,
+        rate: f64,
+        as-of: string,
+        source: string,
+        expirations: list<string>,
+        calls: list<option-contract>,
+        puts: list<option-contract>,
+    }
+
+    get-stock: func(ticker: string) -> result<stock-quote, string>;
+    get-chain: func(ticker: string) -> result<option-chain, string>;
+}
+
+interface strategy {
+    use types.{option-spec};
+
+    enum option-side { buy, sell }
+    enum option-kind { call, put }
+
+    record leg {
+        side: option-side,
+        kind: option-kind,
+        strike: f64,
+        expiration-days: f64,
+        iv: f64,
+        units: u32,
+        entry-premium: f64,
+    }
+
+    record scenario {
+        spot: f64,
+        rate: f64,
+        vol: f64,
+        price-min: f64,
+        price-max: f64,
+        price-steps: u32,
+        days-min: f64,
+        days-max: f64,
+        day-steps: u32,
+    }
+
+    record grid-result {
+        // Flat row-major matrix, length = price-steps * day-steps.
+        // pnl[i * day-steps + j] is the dollar P&L at price-axis[i] and day-axis[j].
+        pnl: list<f64>,
+        rows: u32,
+        cols: u32,
+        price-axis: list<f64>,
+        day-axis: list<f64>,
+        max-profit: f64,
+        max-loss: f64,
+        // Fraction of grid cells where the strategy is profitable (0–100).
+        // This is the geometric/grid-coverage measure — does NOT correspond
+        // to a probability of profit because the grid is uniformly sampled
+        // over the user-chosen price range.
+        profit-pct: f64,
+        // Lognormal-weighted probability that the underlying lands in the
+        // profitable price region at the horizon, given scenario vol + rate.
+        // Interpreted as a true PoP under risk-neutral lognormal dynamics.
+        pop-at-horizon: f64,
+        breakeven-prices: list<f64>,
+        net-premium: f64,
+        net-delta: f64,
+        net-gamma: f64,
+        net-vega: f64,
+        net-theta: f64,
+    }
+
+    compute-pnl: func(legs: list<leg>, scen: scenario) -> result<grid-result, string>;
+}
+
+interface tickers {
+    record ticker-match {
+        symbol: string,
+        name: string,
+        // "local"  = matched the baked SEC index
+        // "yahoo"  = fell through to Yahoo's live search endpoint
+        source: string,
+    }
+    record ticker-results {
+        matches: list<ticker-match>,
+        evaluated: u32,        // size of local universe scanned
+        used-yahoo: bool,      // true if the Yahoo fallback was hit
+    }
+    search: func(query: string, limit: u32) -> result<ticker-results, string>;
+}
+
+interface search {
+    use strategy.{option-side, option-kind};
+
+    record search-contract {
+        kind: option-kind,
+        strike: f64,
+        expiration-days: f64,
+        iv: f64,
+        mid: f64,
+    }
+
+    record search-config {
+        spot: f64,
+        rate: f64,
+        scenario-vol: f64,
+        price-min: f64,
+        price-max: f64,
+        price-steps: u32,
+        days-min: f64,
+        days-max: f64,
+        day-steps: u32,
+        max-results: u32,
+        scoring: string,
+    }
+
+    record search-leg {
+        side: option-side,
+        kind: option-kind,
+        strike: f64,
+        expiration-days: f64,
+        iv: f64,
+        units: u32,
+        entry-premium: f64,
+    }
+
+    record ranked-strategy {
+        name: string,
+        kind-key: string,
+        legs: list<search-leg>,
+        max-profit: f64,
+        max-loss: f64,
+        profit-pct: f64,
+        pop-at-horizon: f64,
+        net-premium: f64,
+        score: f64,
+    }
+
+    record search-result {
+        evaluated: u32,
+        elapsed-ms: u32,
+        ranked: list<ranked-strategy>,
+    }
+
+    search: func(contracts: list<search-contract>, config: search-config) -> result<search-result, string>;
+}
+
+world bs-pricer {
+    export black-scholes;
+}
+
+world mc-pricer {
+    export monte-carlo;
+}
+
+world bt-pricer {
+    export binomial-tree;
+}
+
+world market-data {
+    export quote;
+    import wasi:http/outgoing-handler@0.2.8;
+    import wasi:http/types@0.2.8;
+    import wasi:io/streams@0.2.8;
+    import wasi:clocks/wall-clock@0.2.8;
+    import wasi:clocks/monotonic-clock@0.2.8;
+}
+
+world strategy-grid-pricer {
+    export strategy;
+}
+
+world strategy-search-pricer {
+    export search;
+}
+
+world ticker-search {
+    export tickers;
+    import wasi:http/outgoing-handler@0.2.8;
+    import wasi:http/types@0.2.8;
+    import wasi:io/streams@0.2.8;
+    import wasi:clocks/wall-clock@0.2.8;
+    import wasi:clocks/monotonic-clock@0.2.8;
+}
