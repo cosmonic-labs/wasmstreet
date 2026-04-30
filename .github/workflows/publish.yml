@@ -65,9 +65,23 @@ jobs:
         with:
           wash-version: "v2.0.5"
 
+      # Run `wash build` directly rather than via wasmcloud/actions/wash-build,
+      # because the latter pipes wash's stdout into result.json and parses it
+      # with jq. wasmstreet's `wash build` shells out to `make compose`, whose
+      # echoed command lines interleave with wash's JSON output and break the
+      # parse. The .wash/config.yaml `component_path` is the artifact we want.
       - name: Build composed component
         id: build
-        uses: wasmcloud/actions/wash-build@main
+        shell: bash
+        run: |
+          set -euo pipefail
+          wash build
+          path=$(yq '.build.component_path' .wash/config.yaml)
+          if [ ! -f "$path" ]; then
+            echo "::error::expected component at $path, not found"
+            exit 1
+          fi
+          echo "component_path=$path" >> "$GITHUB_OUTPUT"
 
       - name: Compute image tags
         id: tags
