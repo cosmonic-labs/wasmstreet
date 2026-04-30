@@ -143,7 +143,12 @@ jobs:
           done
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
+      # Build provenance attestation requires the GitHub artifact attestation
+      # feature, which is currently not enabled on cosmonic-labs's plan. Kept
+      # in the workflow as continue-on-error so re-enabling it later is just a
+      # matter of removing the flag once billing is upgraded.
       - name: Attest published image
+        continue-on-error: true
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ghcr.io/cosmonic-labs/wasmstreet
