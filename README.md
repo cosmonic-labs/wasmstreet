@@ -39,6 +39,10 @@ WasmStreet is a single-page options strategy workbench. Pick a ticker, browse a 
    └─────────────────────  query1.finance.yahoo.com  ───────────────────────────┘
 ```
 
+## Demonstration
+![WasmStreet - Black Scholes Option Price Strategy Simulator](wasmstreet-demo-clip-minified.gif) 
+
+
 ## Workflow
 
 1. **Pick a ticker** — autocomplete drops a list of ~145 names from a wasm component. Select one and a real Yahoo `/v8/finance/chart` request leaves the wasm sandbox, comes back, and seeds a believable option chain (3 expirations × 9 strikes per side, modeled with a real IV smile).
