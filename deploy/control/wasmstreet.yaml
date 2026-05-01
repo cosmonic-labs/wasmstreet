@@ -1,0 +1,45 @@
+# Cosmonic Control HTTPTrigger for wasmstreet.
+#
+# wasmstreet is a single composed component (eight upstream Rust + C++
+# components linked together with `wac plug` at build time):
+#   - Exports wasi:http/incoming-handler — the trigger routes ingress
+#     traffic to it.
+#   - Imports wasi:http/outgoing-handler — the inner market-data and
+#     ticker-search components call out to Yahoo Finance for live spot
+#     prices and ticker autocomplete fallback.
+#
+# Outbound network access is scoped to query1.finance.yahoo.com via
+# localResources.allowedHosts.
+#
+# Apply with:
+#   kubectl apply -f deploy/control/wasmstreet.yaml
+#
+# Reach the deployed app via the runtime gateway (matches ingress.host):
+#   curl -H 'Host: wasmstreet.localhost.cosmonic.sh' http://<gateway-host>/
+apiVersion: control.cosmonic.io/v1alpha1
+kind: HTTPTrigger
+metadata:
+  name: wasmstreet
+  namespace: cosmonic-system
+spec:
+  ingress:
+    host: wasmstreet.localhost.cosmonic.sh
+    paths:
+      - pathType: Prefix
+        path: /
+  timeout: 300s
+  replicas: 1
+  template:
+    spec:
+      hostInterfaces:
+        - namespace: wasi
+          package: logging
+          version: 0.1.0-draft
+          interfaces:
+            - logging
+      components:
+        - name: wasmstreet
+          image: ghcr.io/cosmonic-labs/wasmstreet:0.1.0
+          localResources:
+            allowedHosts:
+              - "https://query1.finance.yahoo.com"
