@@ -33,6 +33,10 @@ spec:
     spec:
       hostInterfaces:
         - namespace: wasi
+          package: http
+          interfaces:
+            - outgoing-handler
+        - namespace: wasi
           package: logging
           version: 0.1.0-draft
           interfaces:
