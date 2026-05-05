@@ -165,6 +165,44 @@ make test                       # native unit tests for every component
 bash tests/integration.sh iter1 # /tickers, /chain, /strategy/pnl
 ```
 
+## Deploy to Cosmonic Control
+
+`deploy/control/httptrigger.yaml` is a ready-to-apply HTTPTrigger CRD that runs
+the composed `wasmstreet.wasm` on a Cosmonic Control cluster.
+
+```bash
+# 1. Kind cluster with port 80/443 forwarded to Traefik's NodePorts
+cat > kind-config.yaml <<'EOF'
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 30443
+        hostPort: 443
+        protocol: TCP
+EOF
+kind create cluster --config ./kind-config.yaml
+
+# 2. Cosmonic Control + hostgroup
+helm upgrade --install cosmonic-control oci://ghcr.io/cosmonic/cosmonic-control \
+  --version 0.4.1 \
+  --namespace cosmonic-system --create-namespace \
+  --set 'ingress.hosts[0].host=wasmstreet.localhost.cosmonic.sh'
+
+helm upgrade --install hostgroup oci://ghcr.io/cosmonic/cosmonic-control-hostgroup \
+  --version 0.4.1 --namespace cosmonic-system
+
+# 3. Apply the manifest
+kubectl apply -f https://raw.githubusercontent.com/cosmonic-labs/wasmstreet/main/deploy/control/httptrigger.yaml
+```
+
+`*.localhost.cosmonic.sh` resolves to `127.0.0.1`, so once the workload is
+ready, browse to <http://wasmstreet.localhost.cosmonic.sh>.
+
 Single curl that proves the whole pipeline:
 
 ```bash
