@@ -30,7 +30,7 @@ spec:
             - logging
       components:
         - name: wasmstreet
-          image: ghcr.io/cosmonic-labs/wasmstreet:2.0.0
+          image: ghcr.io/cosmonic-labs/wasmstreet:1.0.0
           localResources:
             allowedHosts:
               - "https://query1.finance.yahoo.com"
