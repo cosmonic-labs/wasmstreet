@@ -1,0 +1,36 @@
+apiVersion: control.cosmonic.io/v1alpha1
+kind: HTTPTrigger
+metadata:
+  name: wasmstreet
+  namespace: cosmonic-system
+  labels:
+    app.kubernetes.io/name: wasmstreet
+    app.kubernetes.io/version: "4.0.0"
+  annotations:
+    kubernetes.io/change-cause: "v4.0.0 — major release"
+spec:
+  ingress:
+    host: wasmstreet.localhost.cosmonic.sh
+    paths:
+      - pathType: Prefix
+        path: /
+  timeout: 300s
+  replicas: 1
+  template:
+    spec:
+      hostInterfaces:
+        - namespace: wasi
+          package: http
+          interfaces:
+            - outgoing-handler
+        - namespace: wasi
+          package: logging
+          version: 0.1.0-draft
+          interfaces:
+            - logging
+      components:
+        - name: wasmstreet
+          image: ghcr.io/cosmonic-labs/wasmstreet:4.0.0
+          localResources:
+            allowedHosts:
+              - "https://query1.finance.yahoo.com"
